@@ -1,7 +1,11 @@
 package com.example.backend.dto;
 
 import com.example.backend.enums.RoleEnum;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 
 import java.io.Serializable;
 
@@ -9,6 +13,7 @@ import java.io.Serializable;
  * DTO for {@link com.example.backend.models.User}
  */
 @AllArgsConstructor
+@NoArgsConstructor(force = true)
 @Getter
 @ToString
 public class UserDto implements Serializable {
