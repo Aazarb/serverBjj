@@ -25,18 +25,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto register(UserDto userToRegister) {
         validateForRegistration(userToRegister);
-        Optional<User> existingUserByEmail = userRepository.findByEmail(userToRegister.getEmail());
+        Optional<User> existingUserByEmail = this.userRepository.findByEmail(userToRegister.getEmail());
         if (existingUserByEmail.isPresent()) {
             throw new DuplicateUserException("User with email " + userToRegister.getEmail() + " already exists");
         }
-        Optional<User> existingUserByUsername = userRepository.findByUsername(userToRegister.getUsername());
+        Optional<User> existingUserByUsername = this.userRepository.findByUsername(userToRegister.getUsername());
         if (existingUserByUsername.isPresent()) {
             throw new DuplicateUserException("User with username " + userToRegister.getUsername() + " already exists");
         }
-        User newUser = new User(userToRegister.getUsername(),userToRegister.getEmail(), bCryptPasswordEncoder.encode(userToRegister.getPassword()),userToRegister.getRole());
-        userRepository.save(newUser);
+        User newUser = new User(userToRegister.getUsername(),userToRegister.getEmail(), this.bCryptPasswordEncoder.encode(userToRegister.getPassword()),userToRegister.getRole());
+        User newUserSaved = userRepository.save(newUser);
 
-        return new UserDto(newUser.getId(),newUser.getUsername(),newUser.getEmail(),newUser.getRole());
+        return new UserDto(newUserSaved.getId(),newUserSaved.getUsername(),newUserSaved.getEmail(),newUserSaved.getRole());
     }
 
 }

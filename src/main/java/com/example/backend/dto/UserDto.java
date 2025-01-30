@@ -39,4 +39,11 @@ public class UserDto implements Serializable {
         this.role = role;
     }
 
+    public UserDto( String username, String email, String password, RoleEnum role) {
+        this.id = null;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.role = role;
+    }
 }
