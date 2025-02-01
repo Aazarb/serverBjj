@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -16,12 +17,15 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private static final  String SECRET_KEY = "maCleSecrete";
-    private static final  long JWT_VALIDITY = 3600L * 1000;
-    private static final  SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes(StandardCharsets.UTF_8));
+    private static final long JWT_VALIDITY = 3600L * 1000;
+    private final SecretKey key;
+
+    public JwtUtil(@Value("${jwt.secret}") String secretKey) {
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+    }
 
 
-//    Génére un token à partir des informations de l'utilisateur.
+    //    Génére un token à partir des informations de l'utilisateur.
     private String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
@@ -53,7 +57,7 @@ public class JwtUtil {
         return expiration.after(new Date());
     }
 
-//    Extrait le nom d'utilisateur ou d'autres claims du token.
+    //    Extrait le nom d'utilisateur ou d'autres claims du token.
     private void extractClaims(String token, Map<String, Object> claims) {
 
         Claims jwtClaims = Jwts.parserBuilder()
