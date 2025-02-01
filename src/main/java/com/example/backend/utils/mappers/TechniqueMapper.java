@@ -1,4 +1,4 @@
-package com.example.backend.utils;
+package com.example.backend.utils.mappers;
 
 import com.example.backend.dto.TechniqueDto;
 import com.example.backend.models.Technique;

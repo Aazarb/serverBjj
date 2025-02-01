@@ -39,4 +39,8 @@ public class UserServiceImpl implements UserService {
         return new UserDto(newUserSaved.getId(),newUserSaved.getUsername(),newUserSaved.getEmail(),newUserSaved.getRole());
     }
 
+    @Override
+    public Optional<User> loadUser(String username) {
+        return this.userRepository.findByUsername(username);
+    }
 }

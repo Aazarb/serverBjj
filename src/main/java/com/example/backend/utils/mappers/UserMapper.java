@@ -1,4 +1,4 @@
-package com.example.backend.utils;
+package com.example.backend.utils.mappers;
 
 import com.example.backend.dto.UserDto;
 import com.example.backend.models.User;
