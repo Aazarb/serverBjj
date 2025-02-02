@@ -17,20 +17,19 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
-    private static final long JWT_VALIDITY = 3600L * 1000;
+    private static final long JWT_VALIDITY = 60L * 60 * 1000;
+    private static final long CONFIRMATION_JWT_VALIDITY = 15L * 60 * 1000;
     private final SecretKey key;
 
     public JwtUtil(@Value("${jwt.secret}") String secretKey) {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-
     //    Génére un token à partir des informations de l'utilisateur.
-    private String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
         String subject = userDetails.getUsername();
-
         long nowMillis = System.currentTimeMillis();
         Date issuedAt = new Date(nowMillis);
         Date expiration = new Date(nowMillis + JWT_VALIDITY);
@@ -44,8 +43,28 @@ public class JwtUtil {
                 .compact();                             // Construit le token en String
     }
 
+    //    Génére un token de confirmation pour valider l'inscription d'un nouvel utilisateur.
+    public String generateConfirmationToken(UserDetails userDetails) {
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("type","confirmation");
+
+        String subject = userDetails.getUsername();
+        long nowMillis = System.currentTimeMillis();
+        Date issuedAt = new Date(nowMillis);
+        Date expiration = new Date(nowMillis + CONFIRMATION_JWT_VALIDITY);
+
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     //    Valide l'authenticité et la date d'expiration du token.
-    private Boolean isTokenValid(String token) {
+    public Boolean isTokenValid(String token) {
 
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -58,7 +77,7 @@ public class JwtUtil {
     }
 
     //    Extrait le nom d'utilisateur ou d'autres claims du token.
-    private void extractClaims(String token, Map<String, Object> claims) {
+    public void extractClaims(String token, Map<String, Object> claims) {
 
         Claims jwtClaims = Jwts.parserBuilder()
                 .setSigningKey(key)
