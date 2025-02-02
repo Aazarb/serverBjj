@@ -5,6 +5,7 @@ import com.example.backend.enums.RoleEnum;
 import com.example.backend.exceptions.DuplicateUserException;
 import com.example.backend.models.User;
 import com.example.backend.repositories.UserRepository;
+import com.example.backend.utils.JwtUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,12 @@ class UserServiceImplTest {
 
     @InjectMocks
     private UserServiceImpl userService;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private EmailServiceImpl emailServiceImpl;
 
     @BeforeEach
     void setUp() {
