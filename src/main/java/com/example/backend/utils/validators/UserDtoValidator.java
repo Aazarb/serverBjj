@@ -11,7 +11,7 @@ public class UserDtoValidator {
 
     private static final String USERNAME_REGEX = "^(?![_.])[a-zA-Z0-9._]{3,20}(?<![_.])$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)$";
-    private static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@]{8,}$"; // Caratères interdits (& %  / " ')
+    private static final String PASSWORD_REGEX = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d@.]{8,}$"; // Caratères interdits (& %  / " ')
 
     public static final String USERNAME_ERROR_MESSAGE = "Username must be 3-20 characters long, can only contain letters, numbers, underscores, and dots, but cannot start or end with an underscore or dot.";
     public static final String EMAIL_ERROR_MESSAGE = "Invalid email format.";
