@@ -21,6 +21,7 @@ public class UserDto implements Serializable {
     private final String username;
     private final String email;
     private final String password;
+    private final Boolean enabled;
     private final RoleEnum role;
 
     public UserDto(String username, String email, String password) {
@@ -28,6 +29,7 @@ public class UserDto implements Serializable {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.enabled = false;
         this.role = RoleEnum.MEMBER;
     }
 
@@ -35,6 +37,7 @@ public class UserDto implements Serializable {
         this.id = id;
         this.username = username;
         this.password = null;
+        this.enabled = false;
         this.email = email;
         this.role = role;
     }
@@ -43,6 +46,7 @@ public class UserDto implements Serializable {
         this.id = null;
         this.username = username;
         this.password = password;
+        this.enabled = false;
         this.email = email;
         this.role = role;
     }
