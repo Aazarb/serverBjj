@@ -65,26 +65,46 @@ public class JwtUtil {
 
     //    Valide l'authenticité et la date d'expiration du token.
     public Boolean isTokenValid(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
 
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+            Date expiration = claims.getExpiration();
+            return expiration.after(new Date());
+        }catch (Exception e) {
+            return false;
+        }
+    }
 
-        Date expiration = claims.getExpiration();
-        return expiration.after(new Date());
+    public Boolean isConfirmationToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            String tokenType = claims.get("type", String.class);
+            return "confirmation".equals(tokenType);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     //    Extrait le nom d'utilisateur ou d'autres claims du token.
     public void extractClaims(String token, Map<String, Object> claims) {
-
-        Claims jwtClaims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        claims.putAll(jwtClaims);
+        try {
+            Claims jwtClaims = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            claims.putAll(jwtClaims);
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'extraction des claims: " + e.getMessage()); // TODO: ajouter un logger plutot qu'utiliser System.err
+        }
     }
 }
