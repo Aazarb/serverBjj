@@ -39,4 +39,13 @@ public class User {
         this.role = role;
         this.enabled = false;
     }
+
+    public User(Long id, String username, String email, String password, RoleEnum role) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.enabled = false;
+    }
 }

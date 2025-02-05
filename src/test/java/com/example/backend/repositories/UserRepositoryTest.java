@@ -21,7 +21,7 @@ class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        User user = new User(null, "JohnDoe", "john@example.com", "hashedPassword", RoleEnum.MEMBER);
+        User user = new User("JohnDoe", "john@example.com", "hashedPassword", RoleEnum.MEMBER);
         userRepository.save(user);
     }
 
