@@ -22,19 +22,19 @@ class UserRepositoryTest {
     @BeforeEach
     void setUp() {
         User user = new User("JohnDoe", "john@example.com", "hashedPassword", RoleEnum.MEMBER);
-        userRepository.save(user);
+        this.userRepository.save(user);
     }
 
     @Test
     void findByEmail() {
-        Optional<User> foundUser = userRepository.findByEmail("john@example.com");
+        Optional<User> foundUser = this.userRepository.findByEmail("john@example.com");
         assertTrue(foundUser.isPresent());
 
     }
 
     @Test
     void findByEmail_ShouldReturnUser_WhenEmailExists() {
-        Optional<User> foundUser = userRepository.findByEmail("john@example.com");
+        Optional<User> foundUser = this.userRepository.findByEmail("john@example.com");
 
         assertTrue(foundUser.isPresent());
         assertEquals("john@example.com", foundUser.get().getEmail());
@@ -42,19 +42,19 @@ class UserRepositoryTest {
 
     @Test
     void findByEmail_ShouldReturnEmpty_WhenEmailNotExists() {
-        Optional<User> foundUser = userRepository.findByEmail("unknown@example.com");
+        Optional<User> foundUser = this.userRepository.findByEmail("unknown@example.com");
         assertFalse(foundUser.isPresent());
     }
 
     @Test
     void findByUsername() {
-        Optional<User> foundUser = userRepository.findByUsername("JohnDoe");
+        Optional<User> foundUser = this.userRepository.findByUsername("JohnDoe");
         assertTrue(foundUser.isPresent());
     }
 
     @Test
     void findByUsername_ShouldReturnUser_WhenUsernameExists() {
-        Optional<User> foundUser = userRepository.findByUsername("JohnDoe");
+        Optional<User> foundUser = this.userRepository.findByUsername("JohnDoe");
 
         assertTrue(foundUser.isPresent());
         assertEquals("JohnDoe", foundUser.get().getUsername());
@@ -62,7 +62,7 @@ class UserRepositoryTest {
 
     @Test
     void findByUsername_ShouldReturnEmpty_WhenUsernameNotExists() {
-        Optional<User> foundUser = userRepository.findByUsername("Mike");
+        Optional<User> foundUser = this.userRepository.findByUsername("Mike");
         assertFalse(foundUser.isPresent());
     }
 }
