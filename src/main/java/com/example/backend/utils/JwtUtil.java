@@ -1,9 +1,11 @@
 package com.example.backend.utils;
 
+import org.slf4j.Logger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,7 @@ import java.util.Map;
 @Component
 public class JwtUtil {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
     private static final long JWT_VALIDITY = 60L * 60 * 1000;
     private static final long CONFIRMATION_JWT_VALIDITY = 15L * 60 * 1000;
     private final SecretKey key;
@@ -64,7 +67,7 @@ public class JwtUtil {
     }
 
     //    Valide l'authenticité et la date d'expiration du token.
-    public Boolean isTokenValid(String token) {
+    public boolean isTokenValid(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(key)
@@ -79,21 +82,6 @@ public class JwtUtil {
         }
     }
 
-    public Boolean isConfirmationToken(String token) {
-        try {
-            Claims claims = Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-
-            String tokenType = claims.get("type", String.class);
-            return "confirmation".equals(tokenType);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     //    Extrait le nom d'utilisateur ou d'autres claims du token.
     public void extractClaims(String token, Map<String, Object> claims) {
         try {
@@ -104,7 +92,7 @@ public class JwtUtil {
                     .getBody();
             claims.putAll(jwtClaims);
         } catch (Exception e) {
-            System.err.println("Erreur lors de l'extraction des claims: " + e.getMessage()); // TODO: ajouter un logger plutot qu'utiliser System.err
+            logger.error("Erreur lors de l'extraction des claims: " + e.getMessage());
         }
     }
 }
