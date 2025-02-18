@@ -27,7 +27,7 @@ public class User {
     @Column(nullable = false)
     private String password;
     @Column(nullable = false)
-    private Boolean enabled;
+    private boolean enabled;
     @Enumerated(EnumType.STRING) // Stocke la valeur de l'Enum en format texte
     @Column(name = "role", nullable = false)
     private RoleEnum role;

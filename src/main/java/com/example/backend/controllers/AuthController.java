@@ -3,6 +3,7 @@ package com.example.backend.controllers;
 import com.example.backend.dto.UserDto;
 import com.example.backend.services.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,9 +24,14 @@ public class AuthController {
         return new ResponseEntity<>(userService.register(userToRegisterDto), HttpStatus.CREATED);
     }
 
-    @GetMapping("/confirm")
+    @GetMapping(value="/confirm",produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> confirmRegistration(@RequestParam String token) {
         userService.confirmRegistration(token);
-        return  ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        return  ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> login(@RequestBody UserDto userDto) {
+        return new ResponseEntity<>(userService.login(userDto), HttpStatus.ACCEPTED);
     }
 }

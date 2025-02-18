@@ -1,14 +1,11 @@
 package com.example.backend.services.implementations;
 
 import com.example.backend.dto.UserDto;
-import com.example.backend.exceptions.ConfirmationTokenExpiredException;
-import com.example.backend.exceptions.ConfirmationTokenNotFoundException;
-import com.example.backend.exceptions.DuplicateUserException;
-import com.example.backend.models.ConfirmationToken;
+import com.example.backend.exceptions.*;
 import com.example.backend.models.User;
-import com.example.backend.repositories.ConfirmationTokenRepository;
 import com.example.backend.repositories.UserRepository;
 import com.example.backend.security.CustomUserDetails;
+import com.example.backend.services.EmailService;
 import com.example.backend.services.UserService;
 import com.example.backend.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.example.backend.utils.validators.UserDtoValidator.validateForRegistration;
@@ -24,22 +22,22 @@ import static com.example.backend.utils.validators.UserDtoValidator.validateForR
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final ConfirmationTokenRepository confirmationTokenRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
-    private final EmailServiceImpl emailServiceImpl;
+    private final EmailService emailService;
     private final JwtUtil jwtUtil;
     @Value("${app.base-url:http://localhost:8080}")
     private String appBaseUrl;
 
-    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, EmailServiceImpl emailServiceImpl, JwtUtil jwtUtil, ConfirmationTokenRepository confirmationTokenRepository) {
+    public UserServiceImpl(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, EmailService emailService, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
-        this.confirmationTokenRepository = confirmationTokenRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
-        this.emailServiceImpl = emailServiceImpl;
+        this.emailService = emailService;
         this.jwtUtil = jwtUtil;
+
     }
 
     @Override
+    @Transactional
     public UserDto register(UserDto userToRegister) {
         validateForRegistration(userToRegister);
         Optional<User> existingUserByEmail = this.userRepository.findByEmail(userToRegister.getEmail());
@@ -50,16 +48,16 @@ public class UserServiceImpl implements UserService {
         if (existingUserByUsername.isPresent()) {
             throw new DuplicateUserException("User with username " + userToRegister.getUsername() + " already exists");
         }
-        User newUser = new User(userToRegister.getUsername(),userToRegister.getEmail(), this.bCryptPasswordEncoder.encode(userToRegister.getPassword()),userToRegister.getRole());
+        User newUser = new User(userToRegister.getUsername(), userToRegister.getEmail(), this.bCryptPasswordEncoder.encode(userToRegister.getPassword()), userToRegister.getRole());
         User newUserSaved = userRepository.save(newUser);
 
         String confirmationToken = this.jwtUtil.generateConfirmationToken(new CustomUserDetails(newUserSaved));
 
-        String confirmationLink = appBaseUrl + "/confirm?token=" + confirmationToken;
+        String confirmationLink = appBaseUrl + "/auth/confirm?token=" + confirmationToken;
 
-        this.emailServiceImpl.sendVerificationEmail(newUser.getEmail(),confirmationLink,newUser.getUsername());
+        this.emailService.sendVerificationEmail(newUser.getEmail(), confirmationLink, newUser.getUsername());
 
-        return new UserDto(newUserSaved.getId(),newUserSaved.getUsername(),newUserSaved.getEmail(),newUserSaved.getRole());
+        return new UserDto(newUserSaved.getId(), newUserSaved.getUsername(), newUserSaved.getEmail(), newUserSaved.getRole());
     }
 
     @Override
@@ -70,29 +68,43 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void confirmRegistration(String token) {
-        Optional<ConfirmationToken> tokenBeforeConfirmation = this.confirmationTokenRepository.findByToken(token);
 
-        if(tokenBeforeConfirmation.isEmpty()) {
-            throw new ConfirmationTokenNotFoundException("Confirmation token not found in database");
-        }
-
-        if(tokenBeforeConfirmation.get().getConfirmationDate()!= null){
-            throw new ConfirmationTokenNotFoundException("Token already confirmed");
-        }
-        if(!jwtUtil.isConfirmationToken(token)) {
-            throw new ConfirmationTokenNotFoundException("Token is not a confirmation token");
+        if (!jwtUtil.isTokenValid(token)) {
+            throw new ConfirmationTokenNotFoundException("Token is not valid");
         }
 
-        if(jwtUtil.isTokenValid(token)) {
-            ConfirmationToken confirmationToken = tokenBeforeConfirmation.get();
-            confirmationToken.setConfirmationDate(new Date());
-            confirmationTokenRepository.save(confirmationToken);
-            User userConfirmed = confirmationToken.getUser();
-            userConfirmed.setEnabled(true);
-            userRepository.save(userConfirmed);
+        Map<String, Object> claims = new HashMap<>();
+        jwtUtil.extractClaims(token, claims);
+
+        String username = (String) claims.get("sub");
+        if (username == null || username.isEmpty()) {
+            throw new ConfirmationTokenNotFoundException("Token does not contain a subject");
         }
-        else {
-            throw new ConfirmationTokenExpiredException("Confirmation token expired");
+
+        Optional<User> optionnalUserToConfirm = this.userRepository.findByUsername(claims.get("sub").toString());
+        if (optionnalUserToConfirm.isEmpty()) {
+            throw new ConfirmationTokenExpiredException("User " + claims.get("sub").toString() + " is not found");
+        }
+        User userToConfirm = optionnalUserToConfirm.get();
+
+        userToConfirm.setEnabled(true);
+        userRepository.save(userToConfirm);
+        this.emailService.sendConfirmationEmail(userToConfirm.getEmail(), userToConfirm.getUsername());
+    }
+
+    @Override
+    public String login(UserDto userDto) {
+        Optional<User> optionnalUserToLogin = this.userRepository.findByEmail(userDto.getEmail());
+        if(optionnalUserToLogin.isEmpty()) {
+            throw new UserNotFoundException("User with " + userDto.getEmail() + " email adress not found");
+        }
+
+        User userToLogin = optionnalUserToLogin.get();
+
+        if(!this.bCryptPasswordEncoder.matches(userDto.getPassword(),userToLogin.getPassword())){
+            throw new IncorrectPasswordException("Password does not match");
+        }else{
+            return this.jwtUtil.generateToken(new CustomUserDetails(userToLogin));
         }
     }
 }
