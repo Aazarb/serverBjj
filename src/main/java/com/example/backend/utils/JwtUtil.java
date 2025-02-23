@@ -1,5 +1,7 @@
 package com.example.backend.utils;
 
+import com.example.backend.exceptions.ConfirmationTokenNotFoundException;
+import com.example.backend.exceptions.MissingTokenSubjectException;
 import org.slf4j.Logger;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,16 +86,33 @@ public class JwtUtil {
     }
 
     //    Extrait le nom d'utilisateur ou d'autres claims du token.
-    public void extractClaims(String token, Map<String, Object> claims) {
+    public Map<String, Object> extractClaims(String token) {
         try {
+            Map<String, Object> claims = new HashMap<>();
             Claims jwtClaims = Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
             claims.putAll(jwtClaims);
+            return claims;
         } catch (Exception e) {
-            logger.error("Erreur lors de l'extraction des claims: " + e.getMessage());
+            logger.error(String.format("Erreur lors de l'extraction des claims: %s", e.getMessage()));
+        }
+        return Collections.emptyMap();
+    }
+
+    public String extractUsername(String token)  throws MissingTokenSubjectException, ConfirmationTokenNotFoundException {
+        if (token == null || token.isEmpty()) {
+            throw new ConfirmationTokenNotFoundException("No token found");
+        }
+        Map<String, Object> claims = extractClaims(token);
+
+        String username = (String) claims.get("sub");
+        if (username == null || username.isEmpty()) {
+            throw new MissingTokenSubjectException("Token does not contain a subject");
+        }else{
+            return username;
         }
     }
 }
